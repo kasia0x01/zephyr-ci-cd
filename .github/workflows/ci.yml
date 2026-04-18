@@ -1,0 +1,33 @@
+name: Zephyr CI
+
+on: [push, pull_request]
+
+jobs:
+  build-and-run:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/kasia0x01/zephyr-ci-arm:latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build hello_world
+        run: |
+          cd /workspace/zephyr
+          west build -b qemu_cortex_m3 $GITHUB_WORKSPACE/hello_world
+
+      - name: Run on QEMU
+        timeout-minutes: 1
+        run: |
+          cd /workspace/zephyr
+          west build -t run 2>&1 | tee /tmp/qemu_output.txt &
+          sleep 10
+          pkill qemu || true
+          
+          if grep -q "Hello World" /tmp/qemu_output.txt; then
+            echo "Test passed"
+          else
+            echo "Test failed"
+            cat /tmp/qemu_output.txt
+            exit 1
+          fi
