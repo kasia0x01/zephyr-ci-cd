@@ -70,3 +70,46 @@ jobs:
         with:
           name: twister-report
           path: twister-out/
+
+  coverage:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/kasia0x01/zephyr-ci-arm:latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build ring_buffer with coverage instrumentation
+        run: |
+          cd /workspace/zephyr
+          west build -b native_sim $GITHUB_WORKSPACE/tests/ring_buffer \
+            -- -DEXTRA_CONF_FILE=$GITHUB_WORKSPACE/tests/ring_buffer/coverage.conf
+
+      - name: Run tests and collect gcov data
+        run: |
+          cd /workspace/zephyr
+          west build -t run || true
+
+      - name: Generate coverage report
+        run: |
+          mkdir -p $GITHUB_WORKSPACE/coverage
+          gcovr \
+            --root $GITHUB_WORKSPACE \
+            --filter "$GITHUB_WORKSPACE/lib/ring_buffer/" \
+            --html-details $GITHUB_WORKSPACE/coverage/index.html \
+            --xml $GITHUB_WORKSPACE/coverage/coverage.xml \
+            --print-summary \
+            /workspace/zephyr/build/
+
+      - name: Upload coverage report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: coverage/coverage.xml
+          token: ${{ secrets.CODECOV_TOKEN }}

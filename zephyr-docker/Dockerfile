@@ -14,7 +14,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN pip3 install --no-cache-dir \
     west \
     pyelftools \
-    cmake
+    cmake \
+    gcovr
 
 # Zephyr SDK – only ARM toolchain, minimal installation
 ARG ZEPHYR_SDK_VERSION=0.16.8
