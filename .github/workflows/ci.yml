@@ -45,3 +45,28 @@ jobs:
           cd /workspace/zephyr
           west build -b native_sim $GITHUB_WORKSPACE/tests/ring_buffer
           west build -t run
+
+  # Twister-based equivalent of the unit-tests job above.
+  # Twister handles board selection, binary execution, and pass/fail
+  # reporting automatically.
+  twister-tests:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/kasia0x01/zephyr-ci-arm:latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run ring_buffer tests via Twister
+        run: |
+          /workspace/zephyr/scripts/twister \
+            --testsuite-root $GITHUB_WORKSPACE/tests \
+            --platform native_sim \
+            --inline-logs
+
+      - name: Upload Twister report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: twister-report
+          path: twister-out/

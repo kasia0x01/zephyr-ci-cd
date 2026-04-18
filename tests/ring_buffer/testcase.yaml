@@ -1,0 +1,4 @@
+tests:
+  ring_buffer.unit:
+    tags: ring_buffer unit
+    platform_allow: native_sim
