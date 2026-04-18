@@ -8,3 +8,4 @@ project(test_ring_buffer)
 add_subdirectory(../../lib/ring_buffer ring_buffer)
 
 target_sources(app PRIVATE main.c)
+target_link_libraries(app PRIVATE ring_buffer)
