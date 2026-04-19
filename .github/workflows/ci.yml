@@ -111,7 +111,7 @@ jobs:
           name: twister-report
           path: twister-out/
 
-  # STRONGLY RECOMMENDED: Sanitizers find bugs that are usually invisible:
+  # RECOMMENDED: Sanitizers find bugs that are usually invisible:
   ## 1. Memory corruptions (ASAN)
   ## 2. Undefined behavior (UBSan)
   sanitizers:
