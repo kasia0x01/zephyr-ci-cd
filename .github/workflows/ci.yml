@@ -1,9 +1,16 @@
 name: Zephyr CI
 
 on: [push, pull_request]
+env:
+  ZEPHYR_DIR: /workspace/zephyr
 
 jobs:
-  build-and-run:
+
+  # WARNING: This implementation is not optimal:
+  # 1. Timing: 'sleep 10' causes false failures if the runner is slow
+  #    and wastes time if the test finishes early.
+  # 2. Dangerous Cleanup: 'pkill' is imprecise and may kill unrelated processes.
+  build-and-run-qemu:
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/kasia0x01/zephyr-ci-arm:latest
@@ -13,13 +20,13 @@ jobs:
 
       - name: Build hello_world
         run: |
-          cd /workspace/zephyr
+          cd $ZEPHYR_DIR
           west build -b qemu_cortex_m3 $GITHUB_WORKSPACE/hello_world
 
       - name: Run on QEMU
         timeout-minutes: 1
         run: |
-          cd /workspace/zephyr
+          cd $ZEPHYR_DIR
           west build -t run 2>&1 | tee /tmp/qemu_output.txt &
           sleep 10
           pkill qemu || true
@@ -32,6 +39,35 @@ jobs:
             exit 1
           fi
 
+  # RECOMMENDED: Twister handles QEMU lifecycle automatically.
+  # 1. Auto-termination: No more 'sleep' or 'pkill'; Twister exits as soon as it sees the output.
+  # 2. Validation: It looks for "PROJECT EXECUTION SUCCESSFUL" or custom strings by default.
+  build-and-run-qemu-twister:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/kasia0x01/zephyr-ci-arm:latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Hello World on QEMU via Twister
+        run: |
+          /workspace/zephyr/scripts/twister \
+            -p qemu_cortex_m3 \
+            -T $GITHUB_WORKSPACE/hello_world \
+            --inline-logs
+
+      - name: Upload Logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qemu-test-results
+          path: twister-out/
+
+  # WARNING: This manual test execution is not ideal:
+  # 1. False positives: Relies on exit codes that may not catch all issues.
+  # 2. No reporting: Lacks structured output (like JUnit XML).
+  # Use twister-tests instead.
   unit-tests:
     runs-on: ubuntu-latest
     container:
@@ -42,13 +78,17 @@ jobs:
 
       - name: Run ring_buffer tests on native_sim
         run: |
-          cd /workspace/zephyr
+          cd $ZEPHYR_DIR
           west build -b native_sim $GITHUB_WORKSPACE/tests/ring_buffer
           west build -t run
 
-  # Twister-based equivalent of the unit-tests job above.
-  # Twister handles board selection, binary execution, and pass/fail
-  # reporting automatically.
+  # RECOMMENDED: This is the optimal approach using Zephyr's test runner (Twister):
+  # 1. Reliability: Twister automatically parses test results and identifies
+  #    failures, timeouts, or crashes that manual scripts might miss.
+  # 2. Scalability: Using --testsuite-root allows for easy discovery of
+  #    multiple tests without adding new steps to the workflow.
+  # 3. Report: Uploading the 'twister-out' directory provides
+  #    detailed logs and reports (JUnit/XML) for debugging failures.
   twister-tests:
     runs-on: ubuntu-latest
     container:
@@ -71,6 +111,9 @@ jobs:
           name: twister-report
           path: twister-out/
 
+  # STRONGLY RECOMMENDED: Sanitizers find bugs that are usually invisible:
+  ## 1. Memory corruptions (ASAN)
+  ## 2. Undefined behavior (UBSan)
   sanitizers:
     runs-on: ubuntu-latest
     container:
@@ -81,15 +124,17 @@ jobs:
 
       - name: Build ring_buffer with ASAN/UBSan
         run: |
-          cd /workspace/zephyr
+          cd $ZEPHYR_DIR
           west build -b native_sim $GITHUB_WORKSPACE/tests/ring_buffer \
             -- -DEXTRA_CONF_FILE=$GITHUB_WORKSPACE/tests/ring_buffer/sanitizers.conf
 
       - name: Run tests under sanitizers
         run: |
-          cd /workspace/zephyr
+          cd $ZEPHYR_DIR
           west build -t run
 
+  # Coverage shows which lines of code are tested.
+  # It will provide a badge with percentage score.
   coverage:
     runs-on: ubuntu-latest
     container:
@@ -100,13 +145,13 @@ jobs:
 
       - name: Build ring_buffer with coverage instrumentation
         run: |
-          cd /workspace/zephyr
+          cd $ZEPHYR_DIR
           west build -b native_sim $GITHUB_WORKSPACE/tests/ring_buffer \
             -- -DEXTRA_CONF_FILE=$GITHUB_WORKSPACE/tests/ring_buffer/coverage.conf
 
       - name: Run tests and collect gcov data
         run: |
-          cd /workspace/zephyr
+          cd $ZEPHYR_DIR
           west build -t run || true
 
       - name: Generate coverage report

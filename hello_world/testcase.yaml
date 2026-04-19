@@ -1,0 +1,9 @@
+tests:
+  sample.hello_world:
+    tags: introduction
+    platform_allow: qemu_cortex_m3
+    harness: console
+    harness_config:
+      type: one_line
+      regex:
+        - "Hello World"
