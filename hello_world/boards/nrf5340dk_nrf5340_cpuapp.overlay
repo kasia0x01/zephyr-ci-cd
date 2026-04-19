@@ -1,8 +1,0 @@
-/* Wyłączenie wszystkich instancji UART na procesorze aplikacyjnym */
-&uart0 {
-	status = "disabled";
-};
-
-&uart1 {
-	status = "disabled";
-};

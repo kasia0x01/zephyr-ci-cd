@@ -152,7 +152,7 @@ jobs:
       - name: Run tests and collect gcov data
         run: |
           cd $ZEPHYR_DIR
-          west build -t run || true
+          west build -t run; echo "exit: $?"
 
       - name: Generate coverage report
         run: |
