@@ -71,6 +71,25 @@ jobs:
           name: twister-report
           path: twister-out/
 
+  sanitizers:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/kasia0x01/zephyr-ci-arm:latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build ring_buffer with ASAN/UBSan
+        run: |
+          cd /workspace/zephyr
+          west build -b native_sim $GITHUB_WORKSPACE/tests/ring_buffer \
+            -- -DEXTRA_CONF_FILE=$GITHUB_WORKSPACE/tests/ring_buffer/sanitizers.conf
+
+      - name: Run tests under sanitizers
+        run: |
+          cd /workspace/zephyr
+          west build -t run
+
   coverage:
     runs-on: ubuntu-latest
     container:
