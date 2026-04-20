@@ -172,8 +172,4 @@ jobs:
           name: coverage-report
           path: coverage/
 
-      - name: Upload to Codecov
-        uses: codecov/codecov-action@v4
-        with:
-          files: coverage/coverage.xml
-          token: ${{ secrets.CODECOV_TOKEN }}
+      # Coverage upload is handled by ci-action.yml (Twister-based workflow).
