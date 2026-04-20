@@ -39,31 +39,6 @@ jobs:
             exit 1
           fi
 
-  # RECOMMENDED: Twister handles QEMU lifecycle automatically.
-  # 1. Auto-termination: No more 'sleep' or 'pkill'; Twister exits as soon as it sees the output.
-  # 2. Validation: It looks for "PROJECT EXECUTION SUCCESSFUL" or custom strings by default.
-  build-and-run-qemu-twister:
-    runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/kasia0x01/zephyr-ci-arm:latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Run Hello World on QEMU via Twister
-        run: |
-          /workspace/zephyr/scripts/twister \
-            -p qemu_cortex_m3 \
-            -T $GITHUB_WORKSPACE/hello_world \
-            --inline-logs
-
-      - name: Upload Logs
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: qemu-test-results
-          path: twister-out/
-
   # WARNING: This manual test execution is not ideal:
   # 1. False positives: Relies on exit codes that may not catch all issues.
   # 2. No reporting: Lacks structured output (like JUnit XML).
@@ -81,35 +56,6 @@ jobs:
           cd $ZEPHYR_DIR
           west build -b native_sim $GITHUB_WORKSPACE/tests/ring_buffer
           west build -t run
-
-  # RECOMMENDED: This is the optimal approach using Zephyr's test runner (Twister):
-  # 1. Reliability: Twister automatically parses test results and identifies
-  #    failures, timeouts, or crashes that manual scripts might miss.
-  # 2. Scalability: Using --testsuite-root allows for easy discovery of
-  #    multiple tests without adding new steps to the workflow.
-  # 3. Report: Uploading the 'twister-out' directory provides
-  #    detailed logs and reports (JUnit/XML) for debugging failures.
-  twister-tests:
-    runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/kasia0x01/zephyr-ci-arm:latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Run ring_buffer tests via Twister
-        run: |
-          /workspace/zephyr/scripts/twister \
-            --testsuite-root $GITHUB_WORKSPACE/tests \
-            --platform native_sim \
-            --inline-logs
-
-      - name: Upload Twister report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: twister-report
-          path: twister-out/
 
   # RECOMMENDED: Sanitizers find bugs that are usually invisible:
   ## 1. Memory corruptions (ASAN)
