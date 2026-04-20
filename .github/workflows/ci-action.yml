@@ -8,19 +8,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          path: app
 
       - uses: zephyrproject-rtos/action-zephyr-setup@v1
         with:
-          app-path: app
+          app-path: .
           toolchains: arm-zephyr-eabi
 
       - name: Run Hello World on QEMU via Twister
         run: |
           $ZEPHYR_BASE/scripts/twister \
             -p qemu_cortex_m3 \
-            -T ${{ github.workspace }}/app/hello_world \
+            -T ${{ github.workspace }}/hello_world \
             --inline-logs
 
       - name: Upload Logs
@@ -34,18 +32,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          path: app
 
       - uses: zephyrproject-rtos/action-zephyr-setup@v1
         with:
-          app-path: app
+          app-path: .
           toolchains: x86_64-zephyr-elf
 
       - name: Run ring_buffer tests via Twister
         run: |
           $ZEPHYR_BASE/scripts/twister \
-            --testsuite-root ${{ github.workspace }}/app/tests \
+            --testsuite-root ${{ github.workspace }}/tests \
             --platform native_sim \
             --inline-logs
 
@@ -60,18 +56,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          path: app
 
       - uses: zephyrproject-rtos/action-zephyr-setup@v1
         with:
-          app-path: app
+          app-path: .
           toolchains: x86_64-zephyr-elf
 
       - name: Run ring_buffer tests with ASAN/UBSan via Twister
         run: |
           $ZEPHYR_BASE/scripts/twister \
-            --testsuite-root ${{ github.workspace }}/app/tests \
+            --testsuite-root ${{ github.workspace }}/tests \
             --platform native_sim \
             --extra-configs CONFIG_ASAN=y CONFIG_UBSAN=y \
             --inline-logs
@@ -87,12 +81,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          path: app
 
       - uses: zephyrproject-rtos/action-zephyr-setup@v1
         with:
-          app-path: app
+          app-path: .
           toolchains: x86_64-zephyr-elf
 
       - name: Install gcovr
@@ -101,7 +93,7 @@ jobs:
       - name: Run ring_buffer tests with coverage via Twister
         run: |
           $ZEPHYR_BASE/scripts/twister \
-            --testsuite-root ${{ github.workspace }}/app/tests \
+            --testsuite-root ${{ github.workspace }}/tests \
             --platform native_sim \
             --coverage \
             --coverage-tool gcovr \
