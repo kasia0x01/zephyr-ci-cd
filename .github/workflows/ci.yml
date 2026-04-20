@@ -1,4 +1,4 @@
-name: Zephyr CI
+name: Custom Docker and manual tests workflow
 
 on: [push, pull_request]
 env:

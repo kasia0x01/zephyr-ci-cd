@@ -1,4 +1,4 @@
-name: Zephyr CI (action-zephyr-setup)
+name: Action-based Zephyr CI Workflow
 
 on: [push, pull_request]
 
@@ -16,7 +16,7 @@ jobs:
 
       - name: Run Hello World on QEMU via Twister
         run: |
-          $ZEPHYR_BASE/scripts/twister \
+          west twister \
             -p qemu_cortex_m3 \
             -T ${{ github.workspace }}/hello_world \
             --inline-logs
@@ -40,7 +40,7 @@ jobs:
 
       - name: Run ring_buffer tests via Twister
         run: |
-          $ZEPHYR_BASE/scripts/twister \
+          west twister \
             --testsuite-root ${{ github.workspace }}/tests \
             --platform native_sim \
             --inline-logs
@@ -64,7 +64,7 @@ jobs:
 
       - name: Run ring_buffer tests with ASAN/UBSan via Twister
         run: |
-          $ZEPHYR_BASE/scripts/twister \
+          west twister \
             --testsuite-root ${{ github.workspace }}/tests \
             --platform native_sim \
             --extra-configs CONFIG_ASAN=y CONFIG_UBSAN=y \
@@ -92,7 +92,7 @@ jobs:
 
       - name: Run ring_buffer tests with coverage via Twister
         run: |
-          $ZEPHYR_BASE/scripts/twister \
+          west twister \
             --testsuite-root ${{ github.workspace }}/tests \
             --platform native_sim \
             --coverage \
