@@ -2,7 +2,8 @@ FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN dpkg --add-architecture i386 && \
+    apt-get update && apt-get install -y --no-install-recommends \
     git cmake ninja-build gperf ccache \
     python3 python3-pip python3-setuptools python3-wheel python3-dev \
     wget xz-utils file make \
@@ -10,6 +11,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc gcc-multilib \
     qemu-system-arm \
     valgrind \
+    libc6-dbg \
+    libc6-dbg:i386 \
     && rm -rf /var/lib/apt/lists/*
 
 RUN pip3 install --no-cache-dir \
