@@ -10,8 +10,9 @@ jobs:
   # 1. Timing: 'sleep 10' causes false failures if the runner is slow
   #    and wastes time if the test finishes early.
   # 2. Dangerous Cleanup: 'pkill' is imprecise and may kill unrelated processes.
-  build-and-run-qemu:
+  qemu-hello-world:
     runs-on: ubuntu-latest
+    timeout-minutes: 1
     container:
       image: ghcr.io/kasia0x01/zephyr-ci-arm:latest
 
@@ -45,6 +46,7 @@ jobs:
   # Use twister-tests instead.
   unit-tests:
     runs-on: ubuntu-latest
+    timeout-minutes: 1
     container:
       image: ghcr.io/kasia0x01/zephyr-ci-arm:latest
 
@@ -57,11 +59,37 @@ jobs:
           west build -b native_sim $GITHUB_WORKSPACE/tests/ring_buffer
           west build -t run
 
-  # RECOMMENDED: Sanitizers find bugs that are usually invisible:
-  ## 1. Memory corruptions (ASAN)
-  ## 2. Undefined behavior (UBSan)
-  sanitizers:
+  valgrind:
+    needs: unit-tests
     runs-on: ubuntu-latest
+    timeout-minutes: 1
+    container:
+      image: ghcr.io/kasia0x01/zephyr-ci-arm:latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install valgrind
+        run: apt-get install -y valgrind
+
+      - name: Install 32-bit debuginfo
+        run: |
+          dpkg --add-architecture i386
+          apt-get update
+          apt-get install -y libc6-dbg libc6-dbg:i386
+
+      - name: Build ring_buffer for native_sim
+        run: |
+          cd $ZEPHYR_DIR
+          west build -b native_sim $GITHUB_WORKSPACE/tests/ring_buffer
+
+      - name: Run tests under Valgrind
+        run: valgrind --error-exitcode=1 --leak-check=full $ZEPHYR_DIR/build/zephyr/zephyr.exe
+
+  sanitizers:
+    needs: unit-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
     container:
       image: ghcr.io/kasia0x01/zephyr-ci-arm:latest
 
@@ -72,17 +100,17 @@ jobs:
         run: |
           cd $ZEPHYR_DIR
           west build -b native_sim $GITHUB_WORKSPACE/tests/ring_buffer \
-            -- -DEXTRA_CONF_FILE=$GITHUB_WORKSPACE/tests/ring_buffer/sanitizers.conf
+            -- -DCONFIG_ZTEST=y -DCONFIG_ASAN=y -DCONFIG_UBSAN=y
 
       - name: Run tests under sanitizers
         run: |
           cd $ZEPHYR_DIR
           west build -t run
 
-  # Coverage shows which lines of code are tested.
-  # It will provide a badge with percentage score.
   coverage:
+    needs: unit-tests
     runs-on: ubuntu-latest
+    timeout-minutes: 1
     container:
       image: ghcr.io/kasia0x01/zephyr-ci-arm:latest
 
@@ -98,7 +126,8 @@ jobs:
       - name: Run tests and collect gcov data
         run: |
           cd $ZEPHYR_DIR
-          west build -t run; echo "exit: $?"
+          west build -t run
+          echo "exit: $?"
 
       - name: Generate coverage report
         run: |
@@ -115,7 +144,12 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-report
+          name: coverage-report-manual
           path: coverage/
 
-      # Coverage upload is handled by ci-action.yml (Twister-based workflow).
+      - name: Upload to Codecov
+        if: always()
+        uses: codecov/codecov-action@v4
+        with:
+          files: coverage/coverage.xml
+          token: ${{ secrets.CODECOV_TOKEN }}
