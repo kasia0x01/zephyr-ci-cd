@@ -1,9 +1,10 @@
 tests:
   sample.hello_world:
+    timeout: 10
     tags: introduction
     platform_allow: qemu_cortex_m3
     harness: console
     harness_config:
       type: one_line
       regex:
-        - "Hello World"
+        - "Popped 5 elements"

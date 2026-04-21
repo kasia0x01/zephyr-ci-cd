@@ -75,7 +75,7 @@ jobs:
         run: |
           cd $ZEPHYR_DIR
           west build -b native_sim $GITHUB_WORKSPACE/tests/ring_buffer \
-            -- -DEXTRA_CONF_FILE=$GITHUB_WORKSPACE/tests/ring_buffer/sanitizers.conf
+            -- -DCONFIG_ZTEST=y -DCONFIG_ASAN=y -DCONFIG_UBSAN=y
 
       - name: Run tests under sanitizers
         run: |

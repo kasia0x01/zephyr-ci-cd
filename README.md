@@ -10,7 +10,7 @@ A practical guide to automated testing for Zephyr RTOS projects or libraries. Ea
 hello_world/          Sample app that invokes library
 lib/ring_buffer/      A portable C library with no Zephyr dependencies
 tests/ring_buffer/    Unit tests for ring_buffer using ztest
-.github/workflows/    CI pipeline showing each technique side by side
+.github/workflows/    CI pipeline
 zephyr-docker/        Docker image used by CI
 ```
 

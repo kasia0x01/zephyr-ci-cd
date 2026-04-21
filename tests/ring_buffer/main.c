@@ -1,5 +1,6 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 #include <zephyr/ztest.h>
+#include <stdlib.h>
 #include "ring_buffer.h"
 
 #define BUF_SIZE 4
@@ -108,3 +109,11 @@ ZTEST(ring_buffer, test_wrap_around)
 	}
 	zassert_true(rb_is_empty(&rb));
 }
+
+/* Proof that asan job is working - uncomment to trigger failure */
+// ZTEST(ring_buffer, test_asan_is_working)
+// {
+// 	int *p = malloc(sizeof(int));
+// 	free(p);
+// 	*p = 42;
+// }

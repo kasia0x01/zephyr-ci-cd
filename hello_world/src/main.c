@@ -16,12 +16,14 @@ int main(void)
 		rb_push(&rb, i * 10);
 	}
 
-	printf("Ring buffer demo (%zu items):\n", rb_count(&rb));
-
 	uint8_t val;
+	size_t popped = 0;
 	while (rb_pop(&rb, &val)) {
 		printf("  popped: %u\n", val);
+		popped++;
 	}
+
+	printf("Popped %zu elements\n", popped);
 
 	return 0;
 }

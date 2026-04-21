@@ -1,5 +1,6 @@
 
 ## Building the image locally
+From the `zephyr-docker` directory:
 ```bash
 docker buildx build -t zephyr-ci-arm .
 ```
