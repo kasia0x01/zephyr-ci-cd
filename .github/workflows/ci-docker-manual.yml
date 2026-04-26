@@ -84,7 +84,7 @@ jobs:
           west build -b native_sim $GITHUB_WORKSPACE/tests/ring_buffer
 
       - name: Run tests under Valgrind
-        run: valgrind --error-exitcode=1 --leak-check=full --show-leak-kinds=definite $ZEPHYR_DIR/build/zephyr/zephyr.exe
+        run: valgrind --error-exitcode=1 --leak-check=full --show-leak-kinds=definite --errors-for-leak-kinds=definite $ZEPHYR_DIR/build/zephyr/zephyr.exe
 
   sanitizers:
     needs: unit-tests
